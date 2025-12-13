@@ -1,5 +1,5 @@
 import {v2 as cloudinary} from 'cloudinary';
-import {fs} from 'fs';
+import fs from 'fs';
 
  // Configuration
     cloudinary.config({ 
@@ -18,7 +18,7 @@ import {fs} from 'fs';
          console.log('file is uploaded on cloudinary',  response.url);
          return response;
       } catch(error){
-         console.error(error);
+         console.error(error, 'abcd');
          fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the uploaded operation gor failed
          return null;
       }
