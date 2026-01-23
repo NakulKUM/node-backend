@@ -3,13 +3,37 @@ import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const videoSchema= new Schema({
    videoFile: {
-      type: String, //Cloudinary url
-      required: true,
+      url: {
+        type: String,
+        required: true
+      },
+      public_id: {
+        type: String,
+        required: true
+      },
+      resource_type: {
+        type: String,
+        enum: ["video"],
+        default: "video"
+      }
    },
+
    thumbnail: {
-      type: String, 
-      required: true,
+      url: {
+        type: String,
+        required: true
+      },
+      public_id: {
+        type: String,
+        required: true
+      },
+      resource_type: {
+        type: String,
+        enum: ["image"],
+        default: "image"
+      }
    },
+
    title: {
       type: String,
       required: true,

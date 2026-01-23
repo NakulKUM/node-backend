@@ -192,6 +192,11 @@ const changeCurrentPassword= asyncHandler(async(req, res)=> {
    if(!isPasswordCorrect){
       throw new ApiError(401, "Invalid old Password")
    }
+
+   if (oldPassword === newPassword) {
+      throw new ApiError(400, "New password cannot be the same as the old password");
+   }
+   
    user.password= newPassword;
    await user.save({validateBeforeSave: false});
 
@@ -209,7 +214,7 @@ const updateAccountDetails= asyncHandler(async(req, res)=> {
    if(!fullname || !email){
       throw new ApiError(400, "All fields are required")
    }
-   const user= User.findByIdAndUpdate(
+   const user= await User.findByIdAndUpdate(
       req.user?._id,
       {
          $set: {

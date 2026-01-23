@@ -19,9 +19,18 @@ import fs from 'fs';
          return response;
       } catch(error){
          console.error(error, 'abcd');
-         fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the uploaded operation gor failed
+         fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the uploaded operation got failed
          return null;
       }
     }
 
-export {uploadOnCloudinary};
+   const deleteFromCloudinary = async (publicId, resourceType = "image") => {
+      if (!publicId) return;
+
+      await cloudinary.uploader.destroy(publicId, {
+         resource_type: resourceType
+      });
+   };
+
+
+export {uploadOnCloudinary, deleteFromCloudinary};
