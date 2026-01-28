@@ -66,20 +66,92 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
 
 const addComment = asyncHandler(async (req, res) => {
-    // TODO: add a comment to a video
-})
+  // TODO: add a comment to a video
+  const { videoId } = req.params;
+  const { content } = req.body;
+
+  // 1️⃣ Validate input
+  if (!content || !content.trim()) {
+    throw new ApiError(400, "Comment content is required");
+  }
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid videoId");
+  }
+
+  // 2️⃣ Check if video exists
+  const videoExists = await Video.exists({ _id: videoId });
+  if (!videoExists) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  // 3️⃣ Create comment
+  const comment = await Comment.create({
+    content: content.trim(),
+    video: videoId,
+    owner: req.user._id
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, comment, "Comment added successfully")
+  );
+});
+
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
+    const {commentId}= req.params;
+    const {content}= req.body;
+    if(!content || !content.trim()){
+      throw new ApiError(400, "Comment content is required")
+    }
+
+    if(!isValidObjectId(commentId)){
+      throw new ApiError(400, "Invalid comment id")
+    }
+    // Combination of findById and save -- 2 DB calls but safer
+    const comment= await Comment.findById(commentId);
+    if(!comment){
+      throw new ApiError(404, "Comment not found")
+    }
+
+    // 🔐 authorization check
+    if (!comment.owner.equals(req.user._id)) {
+      throw new ApiError(403, "You are not allowed to update this comment");
+    }
+
+    comment.content= content.trim();
+    await comment.save();
+
+    // const updatedComment= await Comment.findByIdAndUpdate(
+    //   commentId,
+    //   {$set: {content: content}},
+    //   {new: true}
+    // )
+
+    return res.status(200).json(
+      new ApiResponse(200, comment, "Comment updated")
+    )
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
+    const {commentId}= req.params;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      throw new ApiError(404, "Comment not found");
+    }
+
+    // 🔐 authorization check
+    if (!comment.owner.equals(req.user._id)) {
+      throw new ApiError(403, "You are not allowed to delete this comment");
+    }
+
+    await Comment.findOneAndDelete(commentId);
+    return res.status(200).json(
+      new ApiResponse(200, null, "Comment deleted successfully")
+    )
 })
 
-export {
-    getVideoComments, 
-    addComment, 
-    updateComment,
-     deleteComment
-    }
+export { getVideoComments, addComment, updateComment, deleteComment}

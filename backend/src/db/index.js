@@ -12,7 +12,3 @@ const connectDB= async ()=> {
 }
 
 export default connectDB;
-
-// const connectionInstance = await mongoose.connect(
-//          'mongodb+srv://nakulrajput301_db_user:Nakul123@cluster0.pi6h0z6.mongodb.net/nodedb?retryWrites=true&w=majority&appName=Cluster0/'
-//       );
