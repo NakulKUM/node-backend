@@ -157,6 +157,10 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Video not found")
   }
 
+  if (video.owner.toString() !== req.user._id.toString()) {
+      throw new ApiError(403, "You are not authorized to update this video")
+  }
+
   const updateData = {}
 
   if (title) updateData.title = title
@@ -188,45 +192,60 @@ const updateVideo = asyncHandler(async (req, res) => {
 // Delete Video-----------------------------------------------------
 
 const deleteVideo = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    //TODO: delete video
+    const { videoId } = req.params;
+    
     if(!isValidObjectId(videoId)){
         throw new ApiError(400, 'Invalid video Id')
     }
-    const video= await Video.findById(videoId)
+
+    const video = await Video.findById(videoId);
+
     if(!video){
         throw new ApiError(404, "video not found")
     }
-    // 🔥 delete thumbnail from cloudinary
-    await deleteFromCloudinary(video.thumbnail.public_id, 'image');
+
+    if (video.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to delete this video");
+    }
+
+    // delete video and thumbnail from cloudinary
+    if(video.videoFile.public_id) {
+        await deleteFromCloudinary(video.videoFile.public_id, 'video');
+    }
+    if(video.thumbnail.public_id) {
+        await deleteFromCloudinary(video.thumbnail.public_id, 'image');
+    }
 
     // delete DB record
     await Video.findByIdAndDelete(videoId);
+
     return res.status(200)
-        .json(new ApiResponse(200, null, 'Video deleted successfully'))
+        .json(new ApiResponse(200, {}, 'Video deleted successfully'))
 })
 
 // Toggle isPublished----------------------------------------------------
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    if(!isValidObjectId(videoId)){
-        throw new ApiError(400, 'Invalid video Id')
-    }
-    const updatedVideo = await Video.findOneAndUpdate(
-        { _id: videoId },
-        [{ $set: { isPublished: { $not: "$isPublished" } } }],
-        { new: true, updatePipeline: true }
-    );
+    const { videoId } = req.params;
+    const userId = req.user._id;
 
-    if (!updatedVideo) {
-        throw new ApiError(404, "Video not found");
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId");
     }
+
+    const video= await findOne({_id: videoId, owner: userId});
+    if(!video){
+        throw new ApiError(404, "Video not found or you are not authorized to perform this action");
+    }
+
+    video.isPublished = !video.isPublished;
+    await video.save();
 
     return res.status(200).json(
-        new ApiResponse(200, updatedVideo, "Video updated successfully")
-    )
-})
+        new ApiResponse(200, video, "Publish status toggled successfully")
+    );
+});
+
 
 export {
     getAllVideos,

@@ -70,7 +70,7 @@ const addComment = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { content } = req.body;
 
-  // 1️⃣ Validate input
+  // 1- Validate input
   if (!content || !content.trim()) {
     throw new ApiError(400, "Comment content is required");
   }
@@ -79,13 +79,13 @@ const addComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid videoId");
   }
 
-  // 2️⃣ Check if video exists
+  // 2- Check if video exists
   const videoExists = await Video.exists({ _id: videoId });
   if (!videoExists) {
     throw new ApiError(404, "Video not found");
   }
 
-  // 3️⃣ Create comment
+  // 3- Create comment
   const comment = await Comment.create({
     content: content.trim(),
     video: videoId,
@@ -115,7 +115,7 @@ const updateComment = asyncHandler(async (req, res) => {
       throw new ApiError(404, "Comment not found")
     }
 
-    // 🔐 authorization check
+    //  authorization check
     if (!comment.owner.equals(req.user._id)) {
       throw new ApiError(403, "You are not allowed to update this comment");
     }
@@ -143,7 +143,7 @@ const deleteComment = asyncHandler(async (req, res) => {
       throw new ApiError(404, "Comment not found");
     }
 
-    // 🔐 authorization check
+    //  authorization check
     if (!comment.owner.equals(req.user._id)) {
       throw new ApiError(403, "You are not allowed to delete this comment");
     }
